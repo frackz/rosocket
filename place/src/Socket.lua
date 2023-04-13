@@ -26,4 +26,9 @@ function Socket:Connect(url : string, host : string): Connection | ConnectionFai
     print(Response)
 end
 
+--- Send a HTTP request through a host (Using axios). Which can act as a proxy.
+function Socket:Send(data : table, host : string)
+    
+end
+
 return Socket
