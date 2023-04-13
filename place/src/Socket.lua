@@ -1,0 +1,29 @@
+local HttpService = game:GetService("HttpService")
+local ApplicationJson = Enum.HttpContentType.ApplicationJson
+
+local Socket = { Sockets = {} }
+
+type Connection = {
+    OnMessage: (callback: (message : string) -> nil) -> nil,
+    OnOpen: (callback: () -> nil) -> nil,
+    OnError: (callback: (error : string) -> nil) -> nil,
+    OnClose: (callback: (reason : string) -> nil) -> nil,
+
+    SendMessage: (message : string) -> nil,
+    Close: () -> nil
+}
+
+type ConnectionFailure = {
+
+}
+
+--- Connect to a websocket by URL
+function Socket:Connect(url : string, host : string): Connection | ConnectionFailure
+    local Response = HttpService:PostAsync(host .. "/connect", HttpService:JSONEncode({
+        url = url,
+    }), ApplicationJson)
+
+    print(Response)
+end
+
+return Socket
