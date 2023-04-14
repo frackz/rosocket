@@ -1,4 +1,4 @@
-import { sockets } from './index.js'
+import { sockets, currentId } from './index.js'
 import axios from 'axios'
 
 export function SendMessage(id, data) {
@@ -11,8 +11,8 @@ export function ClearMessages(id) {
     sockets[id]["messages"] = []
 }
 
-export function SocketExist(id) {
-    return id && sockets[id]
+export function GetSocket(id) {
+    return sockets[id]
 }
 
 export function SendRequest(data, res) {
