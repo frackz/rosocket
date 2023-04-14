@@ -1,7 +1,7 @@
 local HttpService = game:GetService("HttpService")
 local ApplicationJson = Enum.HttpContentType.ApplicationJson
 
-local Socket = { Sockets = {} }
+local Socket = { Sockets = {}, Host = nil, Timeout = 0.8 }
 
 type Connection = {
     OnMessage: (callback: (message : string) -> nil) -> nil,
@@ -22,15 +22,17 @@ type Response = {
 }
 
 coroutine.resume(coroutine.create(function()
-    while wait(50 / 1000) do
-        local Response = HttpService:GetAsync('' .. "/messages")
+    while wait(Socket.Timeout) do
+        local Response = HttpService:GetAsync(Socket.Host.. "/messages")
+
         if Response then
             Response = HttpService:JSONDecode(Response)
-            for k, d in pairs(Socket.Sockets) do
-                local data = Response[k]
-                for _, v2 in pairs(data) do
-                    for _, v in pairs(d.events[v2.type]) do
-                        v(v2.data)
+            for id, socket in pairs(Socket.Sockets) do
+                local data = Response[id]
+
+                for _, msg in pairs(data) do
+                    for _, v in pairs(socket.events[msg.type]) do
+                        v(msg.data)
                     end
                 end
             end
@@ -38,9 +40,19 @@ coroutine.resume(coroutine.create(function()
     end
 end))
 
+--- Set the host URL. THIS IS A REQUIREMENT
+function Socket:SetHost(host: string)
+    self.Host = host
+end
+
+--- Set the message looking timeout.
+function Socket:SetTimeout(timeout: number)
+    self.Timeout = timeout
+end
+
 --- Connect to a websocket using a URL.
-function Socket:Connect(url : string, host : string): Connection | nil
-    local Response = HttpService:PostAsync(host .. "/connect", HttpService:JSONEncode({
+function Socket:Connect(url : string): Connection | nil
+    local Response = HttpService:PostAsync(self.Host .. "/connect", HttpService:JSONEncode({
         url = url,
     }), ApplicationJson)
 
@@ -57,53 +69,28 @@ function Socket:Connect(url : string, host : string): Connection | nil
 
             local id = Response.id
 
-            function data:OnMessage(callback)
-                table.insert(self.events.message, callback)
-            end
+            function data.OnMessage(callback) table.insert(data.events.message, callback) end
+            function data.OnOpen(callback) table.insert(data.events.open, callback) end
+            function data.OnError(callback) table.insert(data.events.error, callback) end
+            function data.OnClose(callback) table.insert(data.events.close, callback) end
 
-            function data:OnOpen(callback)
-                table.insert(self.events.open, callback)
-            end
-
-            function data:OnError(callback)
-                table.insert(self.events.error, callback)
-            end
-
-            function data:OnClose(callback)
-                table.insert(self.events.close, callback)
-            end
-
-            function data:SendMessage(message: any)
-                local Resp = HttpService:PostAsync(host .. "/send", HttpService:JSONEncode({
-                    type = "socket",
-                    id = id,
-                    message = message
-                }), ApplicationJson)
+            function data.SendMessage(message: any)
+                local Resp = HttpService:PostAsync(Socket.Host .. "/send", HttpService:JSONEncode({ type = "socket", id = id, message = message }), ApplicationJson)
 
                 if Resp then
                     Resp = HttpService:JSONDecode(Resp)
-                    if Resp.success then
-                        return true
-                    else
-                        return false, error(Resp.msg)
-                    end
+                    return Resp.success, Resp.msg
                 end
 
                 return false
             end
 
-            function data:Close()
-                local Resp = HttpService:PostAsync(host .. "/close", HttpService:JSONEncode({
-                    id = id,
-                }), ApplicationJson)
+            function data.Close()
+                local Resp = HttpService:PostAsync(Socket.Host .. "/close", HttpService:JSONEncode({ id = id }), ApplicationJson)
 
                 if Resp then
                     Resp = HttpService:JSONDecode(Resp)
-                    if Resp.success then
-                        return true
-                    else
-                        return false, error(Resp.msg)
-                    end
+                    return Resp.success, Resp.msg
                 end
 
                 return false
@@ -118,8 +105,8 @@ function Socket:Connect(url : string, host : string): Connection | nil
 end
 
 --- Send a HTTP request using Axios - this can act as a proxy
-function Socket:Send(data, host : string): Response | nil
-    local Response = HttpService:PostAsync(host .. "/send", HttpService:JSONEncode({
+function Socket:Send(data): Response | nil
+    local Response = HttpService:PostAsync(Socket.Host .. "/send", HttpService:JSONEncode({
         type = "request",
         data = data
     }), ApplicationJson)

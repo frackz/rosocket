@@ -1,3 +1,1 @@
-local WebSocket = require(script.Socket)
-
-return WebSocket
+return require(script.Socket)

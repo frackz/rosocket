@@ -1,12 +1,13 @@
 local WebSocket = require(script.Parent.Socket)
 
-local host = ''
+WebSocket:SetHost('https://anguishedoutlandishcoin.bertil123.repl.co')
+WebSocket:SetTimeout(0.5) -- If you have a large game, maybe its good to tick this up
 
 function TestRequest()
     local Request = WebSocket:Send({
         method = "get",
         url = "https://raw.githubusercontent.com/frackz/fivecord/main/src/Socket.js"
-    }, host)
+    })
 
     if Request then
         print(Request.StatusCode)
@@ -14,19 +15,23 @@ function TestRequest()
 end
 
 function TestSocket()
-    local Resp = WebSocket:Connect('wss://socketsbay.com/wss/v2/1/demo/', host)
+    local Resp = WebSocket:Connect('wss://socketsbay.com/wss/v2/1/demo/')
     
-    Resp:SendMessage('asd')
+    Resp.SendMessage('asd')
 
-    Resp:OnOpen(function()
+    Resp.OnOpen(function()
         print("OPENED")
     end)
-
-    Resp:OnMessage(function(msg)
-        print(Resp:Close())
+    
+    Resp.OnError(function(error)
+        print(error)
     end)
 
-    Resp:OnClose(function()
+    Resp.OnMessage(function(msg)
+        print(msg)
+    end)
+
+    Resp.OnClose(function()
         print("CLOSE")
     end)
 end
