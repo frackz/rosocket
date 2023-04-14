@@ -18,7 +18,12 @@ app.post("/connect", (req: Request, res: Response) => {
     currentId += 1
 
     let id = currentId.toString()
-    let connection = new WebSocket(url)
+    let connection
+    try {
+        connection = new WebSocket(url)
+    } catch {
+        return res.json({success: false, msg: "Invalid Websocket"})
+    }
     
     connection.on('open', () => {
         sockets[id].open = true
@@ -36,7 +41,7 @@ app.post("/connect", (req: Request, res: Response) => {
 
     sockets[id] = { messages: [], connection: connection, open: false }
 
-    res.send(id)
+    res.json({success: true, id: id})
 })
 
 app.post("/send", (req: Request, res: Response) => {
