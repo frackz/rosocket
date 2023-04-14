@@ -1,4 +1,5 @@
 import { sockets } from './index.js'
+import axios from 'axios'
 
 export function SendMessage(id, data) {
     let messages: Array<Object> = sockets[id]["messages"]
@@ -8,4 +9,27 @@ export function SendMessage(id, data) {
 
 export function ClearMessages(id) {
     sockets[id]["messages"] = []
+}
+
+export function SocketExist(id) {
+    return id && sockets[id]
+}
+
+export function SendRequest(data, res) {
+    return axios(data).then((response) => {
+        res.json({
+            success: true,
+            status: {
+                code: response.status,
+                message: response.statusText
+            },
+            headers: response.headers,
+            body: response.data
+        })
+    }).catch((reason) => {
+        res.json({
+            success: false,
+            body: reason.body
+        })
+    })
 }
