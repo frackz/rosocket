@@ -1,21 +1,25 @@
-import { sockets, currentId } from './index.js'
+import { sockets } from './index.js'
 import axios from 'axios'
 
-export function SendMessage(id, data) {
+export function getId() {
+    return Object.keys(sockets).length
+}
+
+export function sendMsg(id, data) {
     let messages: Array<Object> = sockets[id]["messages"]
 
     messages.push(data)
 }
 
-export function ClearMessages(id) {
+export function clearMsg(id) {
     sockets[id]["messages"] = []
 }
 
-export function GetSocket(id) {
+export function getSocket(id) {
     return sockets[id]
 }
 
-export function SendRequest(data, res) {
+export function sendRequest(data, res) {
     return axios(data).then((response) => {
         res.json({
             success: true,
