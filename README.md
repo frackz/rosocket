@@ -13,10 +13,15 @@
 ## Usage
 ```lua
 local WebSocket = require(path)
-WebSocket:SetHost('Your Webserver link')
+WebSocket:SetHost('Your Webserver link') -- The link to your webserver
 WebSocket:SetTimeout(1.0) -- Depending on how big or how strong your server is
 
 local server = WebSocket:Connect('WebSocket link')
+
+server.OnOpen:Connect(function()
+    server.Send("Hey server")
+end)
+
 server.OnMessage:Connect(function(msg)
     print("New message!!!! "..msg)
     print("I will give you a message then")
@@ -29,11 +34,8 @@ server.OnMessage:Connect(function(msg)
     end
 end)
 
-server.OnOpen:Connect(function()
-    server.Send("Hey server")
-end)
+server.OnError:Connect(error) -- This will just connect it to the error function, which will display in the output
 
-server.OnError:Connect(error)
 server.OnClose:Connect(function()
     print("Websocket closed :(")
 end)
