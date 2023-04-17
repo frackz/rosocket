@@ -1,5 +1,4 @@
 import { Request, Response, Router } from 'express';
-
 import WebSocket from 'ws'
 
 import { getSocket, sendRequest } from '../functions.js'
