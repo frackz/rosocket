@@ -12,8 +12,7 @@ messages.get("/messages", (req: Request, res: Response) => {
     if (id == null) { // Return all socket messages
         let messages = {}
         for (const key in sockets) {
-            let value = getSocket(key)
-            messages[key] = value.messages
+            messages[key] = getSocket(key).messages
 
             clearMsg(key)
         }

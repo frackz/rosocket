@@ -18,6 +18,7 @@ send.post("/send", (req: Request, res: Response) => {
     let socket = getSocket(id)
 
     if (!socket) return res.json({success: false, msg: "Invalid Socket"})
+    if (!socket.open) return res.json({success: false, msg: "Socket is closed"})
     if (message == null) return res.json({success: false, msg: "Invalid Message"})
 
     let connection: WebSocket = socket.connection

@@ -17,7 +17,6 @@ connect.post("/connect", (req: Request, res: Response) => {
     try {
         connection = new WebSocket(url)
     } catch(err) {
-        console.log(err)
         return res.json({success: false, msg: "Error: "+err})
     }
     
@@ -36,6 +35,5 @@ connect.post("/connect", (req: Request, res: Response) => {
     })
 
     sockets[id] = { messages: [], connection: connection, open: false }
-
     res.json({success: true, id: id})
 })

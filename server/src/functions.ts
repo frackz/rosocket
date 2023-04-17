@@ -1,25 +1,12 @@
 import { sockets } from './index.js'
 import axios from 'axios'
 
-export function getId() {
-    return Object.keys(sockets).length
-}
+export const getId = () => { return Object.keys(sockets).length }
+export const sendMsg = (id, data) => sockets[id]["messages"].push(data)
+export const clearMsg = (id) => sockets[id]["messages"] = []
+export const getSocket = (id) => { return sockets[id] }
 
-export function sendMsg(id, data) {
-    let messages: Array<Object> = sockets[id]["messages"]
-
-    messages.push(data)
-}
-
-export function clearMsg(id) {
-    sockets[id]["messages"] = []
-}
-
-export function getSocket(id) {
-    return sockets[id]
-}
-
-export function sendRequest(data, res) {
+export const sendRequest = (data, res) => {
     return axios(data).then((response) => {
         res.json({
             success: true,
@@ -30,10 +17,5 @@ export function sendRequest(data, res) {
             headers: response.headers,
             body: response.data
         })
-    }).catch((reason) => {
-        res.json({
-            success: false,
-            body: reason.body
-        })
-    })
+    }).catch((reason) => res.json({ success: false, body: reason.body }))
 }
