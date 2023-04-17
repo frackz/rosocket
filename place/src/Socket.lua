@@ -55,6 +55,7 @@ coroutine.resume(coroutine.create(function()
         end
         for id, socket in pairs(Socket.Sockets) do
             local data = Response[id]
+            
             for _, msg in pairs(data) do
                 local type, data = msg.type, msg.data
 
