@@ -1,5 +1,4 @@
 local HttpService = game:GetService("HttpService")
-local ApplicationJson = Enum.HttpContentType.ApplicationJson
 
 local Socket = { Sockets = {}, Host = nil, Timeout = 0.8, Types = {
     open = 'OnOpen',
@@ -53,12 +52,12 @@ coroutine.resume(coroutine.create(function()
         if not Success then
             return
         end
+
         for id, socket in pairs(Socket.Sockets) do
             local data = Response[id]
             
             for _, msg in pairs(data) do
                 local type, data = msg.type, msg.data
-
                 local event = socket.Run[Socket.Types[type]] :: BindableEvent
 
                 event:Fire(data)

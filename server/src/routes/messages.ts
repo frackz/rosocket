@@ -9,7 +9,7 @@ messages.get("/messages", (req: Request, res: Response) => {
     let body = req.query
     let id: string = body.id
 
-    if (id == null) { // Return all socket messages
+    if (id == null) {
         let messages = {}
         for (const key in sockets) {
             messages[key] = getSocket(key).messages
