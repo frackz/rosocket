@@ -1,15 +1,20 @@
 local HttpService = game:GetService("HttpService")
 local ApplicationJson = Enum.HttpContentType.ApplicationJson
 
-local Socket = { Sockets = {}, Host = nil, Timeout = 0.8 }
+local Socket = { Sockets = {}, Host = nil, Timeout = 0.8, Types = {
+    open = 'OnOpen',
+    message = 'OnMessage',
+    error = 'OnError',
+    close = 'OnClose'
+}}
 
 type Connection = {
-    OnMessage: (callback: (message : string) -> nil) -> nil,
-    OnOpen: (callback: () -> nil) -> nil,
-    OnError: (callback: (error : string) -> nil) -> nil,
-    OnClose: (callback: (reason : string) -> nil) -> nil,
+    OnOpen: RBXScriptSignal,
+    OnMessage: RBXScriptSignal,
+    OnError: RBXScriptSignal,
+    OnClose: RBXScriptSignal,
 
-    SendMessage: (message : string) -> boolean,
+    Send: (message : string) -> boolean,
     Close: () -> nil
 }
 
@@ -21,20 +26,41 @@ type Response = {
     Body: any
 }
 
+local function Request(route: string, method: string, body: table)
+    local request = HttpService:RequestAsync({
+        Url = Socket.Host .. '/' .. route,
+        Method = method,
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = if body then HttpService:JSONEncode(body or {}) else nil
+    })
+
+    local body = HttpService:JSONDecode(request.Body)
+
+    return body, request.StatusCode == 200 and (body.success == nil or body.success == true)
+end
+
+local function Event(): BindableEvent
+    local event = Instance.new('BindableEvent')
+    return event
+end
+
 coroutine.resume(coroutine.create(function()
     while wait(Socket.Timeout) do
-        local Response = HttpService:GetAsync(Socket.Host.. "/messages")
+        local Response, Success = Request('messages', 'GET')
 
-        if Response then
-            Response = HttpService:JSONDecode(Response)
-            for id, socket in pairs(Socket.Sockets) do
-                local data = Response[id]
+        if not Success then
+            return
+        end
+        for id, socket in pairs(Socket.Sockets) do
+            local data = Response[id]
+            for _, msg in pairs(data) do
+                local type, data = msg.type, msg.data
 
-                for _, msg in pairs(data) do
-                    for _, v in pairs(socket.events[msg.type]) do
-                        v(msg.data)
-                    end
-                end
+                local event = socket.Run[Socket.Types[type]] :: BindableEvent
+
+                event:Fire(data)
             end
         end
     end
@@ -52,78 +78,77 @@ end
 
 --- Connect to a websocket using a URL.
 function Socket:Connect(url : string): Connection | nil
-    local Response = HttpService:PostAsync(self.Host .. "/connect", HttpService:JSONEncode({
-        url = url,
-    }), ApplicationJson)
+    if not self.Host then
+        return error("Need to set a host. Use: ...:SetHost('host here')")
+    end
 
-    if Response then
-        Response = HttpService:JSONDecode(Response)
+    local Response, Success = Request('connect', 'POST', {
+        url = url
+    })
 
-        if Response.success then
-            local data = { events = {
-                message = {},
-                open = {},
-                error = {},
-                close = {}
-            }}
+    if Success then
+        local id = Response.id
+        local events = { OnOpen = Event(), OnMessage = Event(), OnError = Event(), OnClose = Event() }
 
-            local id = Response.id
+        local data = {
+            OnOpen = events.OnOpen.Event, OnMessage = events.OnMessage.Event, OnError = events.OnError.Event, OnClose = events.OnClose.Event,
+            
+            Run = events
+        }
 
-            function data.OnMessage(callback) table.insert(data.events.message, callback) end
-            function data.OnOpen(callback) table.insert(data.events.open, callback) end
-            function data.OnError(callback) table.insert(data.events.error, callback) end
-            function data.OnClose(callback) table.insert(data.events.close, callback) end
+        function data.Send(message: any)
+            local Response, Success = Request('send', 'POST', {
+                type = "socket",
+                id = id,
+                message = message
+            })
 
-            function data.SendMessage(message: any)
-                local Resp = HttpService:PostAsync(Socket.Host .. "/send", HttpService:JSONEncode({ type = "socket", id = id, message = message }), ApplicationJson)
-
-                if Resp then
-                    Resp = HttpService:JSONDecode(Resp)
-                    return Resp.success, Resp.msg
-                end
-
-                return false
+            if not Success then
+                return false, Response.msg
             end
 
-            function data.Close()
-                local Resp = HttpService:PostAsync(Socket.Host .. "/close", HttpService:JSONEncode({ id = id }), ApplicationJson)
-
-                if Resp then
-                    Resp = HttpService:JSONDecode(Resp)
-                    return Resp.success, Resp.msg
-                end
-
-                return false
-            end
-
-            self.Sockets[id] = data
-            return data
+            return true
         end
 
-        return nil, error(Response.msg)
+        function data.Close()
+            local Response, Success = Request('close', 'POST', {
+                id = id,
+            })
+
+            if not Success then
+                return false, Response.msg
+            end
+
+            return true
+        end
+
+        self.Sockets[id] = data
+        return data
     end
+
+    return nil, error(Response.msg or 'Invalid error')
 end
 
 --- Send a HTTP request using Axios - this can act as a proxy
 function Socket:Send(data): Response | nil
-    local Response = HttpService:PostAsync(Socket.Host .. "/send", HttpService:JSONEncode({
+    if not self.Host then
+        return error("Need to set a host. Use: ...:SetHost('host here')")
+    end
+
+    local Response, Success = Request('send', 'POST', {
         type = "request",
         data = data
-    }), ApplicationJson)
+    })
 
-    if Response then
-        Response = HttpService:JSONDecode(Response)
-
-        if Response.success then
-            local Status = Response.status
-            return {
-                Success = Status.code >= 200 and Status.code <= 299,
-                StatusCode = Status.code,
-                StatusMessage = Status.message,
-                Headers = Response.headers,
-                Body = Response.body
-            } :: Response
-        end
+    if Success then
+        local Status = Response.status
+        return {
+            Success = Status.code >= 200 and Status.code <= 299,
+            StatusCode = Status.code,
+            StatusMessage = Status.message,
+            Headers = Response.headers,
+            Body = Response.body
+        } :: Response
     end
 
     return nil

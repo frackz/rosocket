@@ -17,24 +17,11 @@ end
 function TestSocket()
     local Resp = WebSocket:Connect('wss://socketsbay.com/wss/v2/1/demo/')
     
-    Resp.SendMessage('asd')
-
-    Resp.OnOpen(function()
-        print("OPENED")
-    end)
-    
-    Resp.OnError(function(error)
-        print(error)
-    end)
-
-    Resp.OnMessage(function(msg)
+    Resp.OnMessage:Connect(function(msg)
         print(msg)
     end)
 
-    Resp.OnClose(function()
-        print("CLOSE")
-    end)
+    Resp.Send('asd')
 end
 
-TestRequest()
 TestSocket()
