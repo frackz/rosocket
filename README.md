@@ -1,4 +1,4 @@
-<h1 align="center">RoSocket</h1>
+<h1 align="center">🔌 RoSocket</h1>
 <div align="center">A websocket utility for Roblox</div>
 
 ## Introduction
