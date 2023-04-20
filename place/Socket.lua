@@ -25,6 +25,7 @@ type Response = {
     Body: any
 }
 
+--- For making requests, this makes it easier
 local function Request(route: string, method: string, body: table)
     local request = HttpService:RequestAsync({
         Url = Socket.Host .. '/' .. route,
@@ -40,6 +41,7 @@ local function Request(route: string, method: string, body: table)
     return body, request.StatusCode == 200 and (body.success == nil or body.success == true)
 end
 
+--- Create and return a bindable event (just saves me braincells)
 local function Event(): BindableEvent
     local event = Instance.new('BindableEvent')
     return event
