@@ -6,7 +6,7 @@
 - Go to https://nodejs.org/en to install NodeJS on your web server.
 - Download RoSocket using Code > Download ZIP
 - Open Roblox Studio and open your place - insert the "place/Socket.lua" into your ServerScriptService
-- Go inside "server/dist" and drag all the files into a folder on your webserver. Now start the files, this is where you will need your NodeJS understanding
+- Go inside "server/dist" and drag all the files into a folder on your webserver. Now start the index.js, this is where you will need your NodeJS understanding
 - Remember to have your port 8000 open for traffic.
 
 ## Requirements
