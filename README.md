@@ -4,16 +4,19 @@
 ## Introduction
 
 - Go to https://nodejs.org/en to install NodeJS on your web server.
-- Click here to download the most recent version of RoSocket: https://github.com/frackz/rosocket/releases
-
+- Download RoSocket using Code > Download ZIP
+- Open Roblox Studio and open your place - insert the "place/Socket.lua" into your ServerScriptService
+- Go inside "server/dist" and drag all the files into a folder on your webserver. Now start the files, this is where you will need your NodeJS understanding
+- Remember to have your port 8000 open for traffic.
 
 ## Requirements
 - Having an accessible webserver (bigger game = better server)
+- Having a understanding of NodeJS
 
 ## Usage
 ```lua
 local WebSocket = require(path)
-WebSocket:SetHost('Your Webserver link') -- The link to your webserver
+WebSocket:SetHost('Your Webserver link / IP with port') -- The link to your webserver
 WebSocket:SetTimeout(1.0) -- Depending on how big or how strong your server is
 
 local server = WebSocket:Connect('WebSocket link')
