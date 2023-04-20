@@ -1,4 +1,4 @@
-<h1 align="center">RoSocket</h1>
+<h1 align="center">🔌 RoSocket</h1>
 <div align="center">A websocket utility for Roblox</div>
 
 ## Introduction
@@ -28,9 +28,23 @@ server.OnMessage:Connect(function(msg)
     
     server.Send("Thanks for your message")
     
-    if math.random(1,10) == 5 then
+    local random = math.random(1,2)
+    if random == 1 then
         print("You now what??? I dont want to listen to your bs anymore")
         server.Close()
+     else
+        local request = WebSocket:Send({ -- You can also send HTTP requests through your webserver, which can act as a proxy. Its using axios
+            method = "get",
+            url = "https://raw.githubusercontent.com/frackz/rosocket/main/README.md?token=GHSAT0AAAAAACBMYPQUWYS6XWCYILU5CFNYZB6JWGA"
+        })
+        
+        if request then
+            print(request.Success)
+            print(request.StatusCode)
+            print(request.StatusMessage)
+            print(request.Headers)
+            print(request.Body)
+        end
     end
 end)
 

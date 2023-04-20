@@ -1,8 +1,8 @@
 {
-  "name": "rospark",
+  "name": "rosocket",
   "version": "1.0.0",
-  "description": "The server for the RoSpark package",
-  "main": "main.js",
+  "description": "The server for the RoSocket package",
+  "main": "dist/main.js",
   "scripts": {
     "go": "rmdir /q /s dist & tsc & node ./dist/index.js"
   },
