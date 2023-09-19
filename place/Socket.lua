@@ -33,18 +33,16 @@ local function Request(route: string, method: string, body: table)
         Headers = {
             ["Content-Type"] = "application/json"
         },
-        Body = if body then HttpService:JSONEncode(body or {}) else nil
+        Body = body and HttpService:JSONEncode(body or {})
     })
 
     local body = HttpService:JSONDecode(request.Body)
-
     return body, request.StatusCode == 200 and (body.success == nil or body.success == true)
 end
 
---- Create and return a bindable event (just saves me braincells)
+--- Create and return a BindableEvent
 local function Event(): BindableEvent
-    local event = Instance.new('BindableEvent')
-    return event
+    return Instance.new('BindableEvent')
 end
 
 coroutine.resume(coroutine.create(function()
@@ -69,66 +67,66 @@ coroutine.resume(coroutine.create(function()
 end))
 
 --- Set the host URL. THIS IS A REQUIREMENT
-function Socket:SetHost(host: string)
+function Socket:Host(host: string)
     self.Host = host
 end
 
 --- Set the message looking timeout.
-function Socket:SetTimeout(timeout: number)
+function Socket:Timeout(timeout: number)
     self.Timeout = timeout
 end
 
 --- Connect to a websocket using a URL.
 function Socket:Connect(url : string): Connection | nil
     if not self.Host then
-        return error("Need to set a host. Use: ...:SetHost('host here')")
+        return error("Need to set a host. Use: ...:Host('host here')")
     end
 
     local Response, Success = Request('connect', 'POST', {
         url = url
     })
 
-    if Success then
-        local id = Response.id
-        local events = { OnOpen = Event(), OnMessage = Event(), OnError = Event(), OnClose = Event() }
+    if not Success then
+        error("Failed to connect to websocket.")
+        return false
+    end
+    
+    local id = Response.id
+    local events = { OnOpen = Event(), OnMessage = Event(), OnError = Event(), OnClose = Event() }
 
-        local data = {
-            OnOpen = events.OnOpen.Event, OnMessage = events.OnMessage.Event, OnError = events.OnError.Event, OnClose = events.OnClose.Event,
-            
-            Run = events
-        }
+    local data = {
+        OnOpen = events.OnOpen.Event, OnMessage = events.OnMessage.Event, OnError = events.OnError.Event, OnClose = events.OnClose.Event,
+        Run = events
+    }
 
-        function data.Send(message: any)
-            local Response, Success = Request('send', 'POST', {
-                type = "socket",
-                id = id,
-                message = message
-            })
+    function data:Send(message: any)
+        local Response, Success = Request('send', 'POST', {
+            type = "socket",
+            id = id,
+            message = message
+        })
 
-            if not Success then
-                return false, Response.msg
-            end
-
-            return true
+        if not Success then
+            return false, Response.msg
         end
 
-        function data.Close()
-            local Response, Success = Request('close', 'POST', {
-                id = id,
-            })
-
-            if not Success then
-                return false, Response.msg
-            end
-
-            return true
-        end
-
-        self.Sockets[id] = data
-        return data
+        return true
     end
 
-    return nil, error(Response.msg or 'Invalid error')
+    function data:Close()
+        local Response, Success = Request('close', 'POST', {
+            id = id,
+        })
+
+        if not Success then
+            return false, Response.msg
+        end
+
+        return true
+    end
+
+    self.Sockets[id] = data
+    return data
 end
 
 --- Send a HTTP request using Axios - this can act as a proxy
@@ -142,18 +140,18 @@ function Socket:Send(data): Response | nil
         data = data
     })
 
-    if Success then
-        local Status = Response.status
-        return {
-            Success = Status.code >= 200 and Status.code <= 299,
-            StatusCode = Status.code,
-            StatusMessage = Status.message,
-            Headers = Response.headers,
-            Body = Response.body
-        } :: Response
+    if not Success then
+        return
     end
-
-    return nil
+    
+    local Status = Response.status
+    return {
+        Success = Status.code >= 200 and Status.code <= 299,
+        StatusCode = Status.code,
+        StatusMessage = Status.message,
+        Headers = Response.headers,
+        Body = Response.body
+    } :: Response
 end
 
 return Socket
