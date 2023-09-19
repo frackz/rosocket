@@ -132,7 +132,7 @@ end
 --- Send a HTTP request using Axios - this can act as a proxy
 function Socket:Send(data): Response | nil
     if not self.Host then
-        return error("Need to set a host. Use: ...:SetHost('host here')")
+        return error("Need to set a host. Use: ...:Host('host here')")
     end
 
     local Response, Success = Request('send', 'POST', {
