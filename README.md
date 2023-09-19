@@ -16,8 +16,8 @@
 ## Usage
 ```lua
 local WebSocket = require(path)
-WebSocket:SetHost('Your Webserver link / IP with port') -- The link to your webserver
-WebSocket:SetTimeout(1.0) -- Depending on how big or how strong your server is
+WebSocket:Host('Your Webserver link / IP with port') -- The link to your webserver
+WebSocket:Timeout(1.0) -- Depending on how big or how strong your server is
 
 local server = WebSocket:Connect('WebSocket link')
 
