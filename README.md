@@ -1,5 +1,6 @@
 <h1 align="center">🔌 RoSocket</h1>
 <div align="center">A websocket utility for Roblox</div>
+<div align="center">This is out of date and prone to mistakes.</div>
 
 ## Introduction
 
