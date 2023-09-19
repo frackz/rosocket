@@ -92,10 +92,10 @@ function Socket:Connect(url : string): Connection | nil
     end
     
     local id = Response.id
-    local events = { OnOpen = Event(), OnMessage = Event(), OnError = Event(), OnClose = Event() }
+    local events = { Open = Event(), Message = Event(), Error = Event(), Close = Event() }
 
     local data = {
-        OnOpen = events.OnOpen.Event, OnMessage = events.OnMessage.Event, OnError = events.OnError.Event, OnClose = events.OnClose.Event,
+        OnOpen = events.Open.Event, OnMessage = events.Message.Event, OnError = events.Error.Event, OnClose = events.Close.Event,
         Run = events
     }
 
